@@ -4,25 +4,23 @@ global class VehicleOrderBatch implements Database.Batchable<sObject> {
         
         return Database.getQueryLocator([
 
-SELECT Id, Status_c, Vehicle___c
+SELECT Id, Status__c, Vehicle__c
 
-FROM Vehicle_Order___c
+FROM Vehicle_Order__c
 
-WHERE Status__c
-
-'Pending'
+WHERE Status__c = 'Pending'
 
 ]);
         
     }
     
-    global void execute(Database.BatchableContext bc, List<Vehicle_Order_c> orderList) {
+    global void execute(Database.BatchableContext bc, List<Vehicle_Order__c> orderList) {
         
         Set<Id> vehicleIds = new Set<Id>();
         
-        for (Vehicle_Order_c order orderList) {
+        for (Vehicle_Order__c order : orderList) {
             
-            if (order.Vehicle_c != null) {
+            if (order.Vehicle__c != null) {
                 
                 vehicleIds.add(order.Vehicle__c);
                 
@@ -32,27 +30,27 @@ WHERE Status__c
         
         if (!vehicleIds.isEmpty()) {
             
-            Map<Id, Vehicle___c> vehicleStockMap = new Map<Id, Vehicle___c>();
+            Map<Id, Vehicle__c> vehicleStockMap = new Map<Id, Vehicle__c>();
             
-            for (Vehicle_c vehicle: [SELECT Id, Stock Quantity_c FROM Vehicle_c WHERE Id IN vehicleIds]) {
+            for (Vehicle__c vehicle : [SELECT Id, Stock_Quantity__c FROM Vehicle__c WHERE Id IN :vehicleIds]) {
                 
-                vehicleStockMap.put(vehicle. Id, vehicle);
+                vehicleStockMap.put(vehicle.Id, vehicle);
                 
             }
             
-            List<Vehicle_Order_c> ordersToUpdate = new List<Vehicle_Order_c>(); List<Vehicle__c> vehiclesToUpdate = new List<Vehicle__c>();
+            List<Vehicle_Order__c> ordersToUpdate = new List<Vehicle_Order__c>(); List<Vehicle__c> vehiclesToUpdate = new List<Vehicle__c>();
             
-            for (Vehicle_Order_c order orderList) {
+            for (Vehicle_Order__c order : orderList) {
                 
-                if (vehicleStockMap.containsKey(order. Vehicle__c)) {
+                if (vehicleStockMap.containsKey(order.Vehicle__c)) {
                     
-                    Vehicle_c vehicle = vehicleStockMap.get(order. Vehicle__c);
+                    Vehicle__c vehicle = vehicleStockMap.get(order.Vehicle__c);
                     
-                    if (vehicle.Stock_Quantity___c > 0) {
+                    if (vehicle.Stock_Quantity__c > 0) {
                         
-                        order.Status___c = 'Confirmed';
+                        order.Status__c = 'Confirmed';
                         
-                        vehicle.Stock_Quantity___c -= 1;
+                        vehicle.Stock_Quantity__c -= 1;
                         
                         ordersToUpdate.add(order);
                         
@@ -70,7 +68,7 @@ WHERE Status__c
                 
             }
             
-            if (!vehicles ToUpdate.isEmpty()) {
+            if (!vehiclesToUpdate.isEmpty()) {
                 
                 update vehiclesToUpdate;
                 
@@ -78,10 +76,11 @@ WHERE Status__c
             
         }
         
-        global void finish(Database.BatchableContext bc) {
-            
-            System.debug('Vehicle order batch job completed.');
-            
-        }
+    }
+    
+    global void finish(Database.BatchableContext bc) {
+        
+        System.debug('Vehicle order batch job completed.');
         
     }
+}
